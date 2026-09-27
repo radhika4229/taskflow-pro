@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+# backend
+target/
+*.class
+
+
+frontend/node_modules/
+frontend/dist/
+
+# both
+.env
+.idea/

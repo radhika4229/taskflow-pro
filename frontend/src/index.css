@@ -1,111 +1,362 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #1A1A1A;
+  background-color: #FAF7F2;
+  color-scheme: light;
+}
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+html.dark, html.dark body {
+  color: #F1F5F9 !important;
+  background-color: #0B0D13 !important;
+  color-scheme: dark;
+}
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html, body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #DDD4C8;
+  border-radius: 9999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #252F42;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C2B8AB;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3B4861;
+}
+
+/* Editorial typography utilities */
+.font-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+/* Gentle transitions */
+.transition-card {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Blocker Card Subtle Pulse Animation */
+@keyframes blocker-pulse {
+  0%, 100% {
+    border-color: #F8C8C8;
+    box-shadow: 0 1px 3px rgba(155, 44, 44, 0.08);
+  }
+  50% {
+    border-color: #D97748;
+    box-shadow: 0 0 0 2px rgba(217, 119, 72, 0.2), 0 3px 12px rgba(217, 119, 72, 0.12);
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+.animate-blocker-pulse {
+  animation: blocker-pulse 2.4s ease-in-out infinite;
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+/* Animated Chain & Connector Flow */
+@keyframes chain-flow {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
   }
 }
 
-body {
-  margin: 0;
+.animate-chain-flow {
+  stroke-dasharray: 6 3;
+  animation: chain-flow 1.2s linear infinite;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* Gentle chain link sway */
+@keyframes chain-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+.animate-chain-link {
+  display: inline-block;
+  animation: chain-sway 2.2s ease-in-out infinite;
+}
+
+/* Shimmer flow on connector line */
+@keyframes connector-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
-p {
-  margin: 0;
+
+.animate-connector-shimmer {
+  background: linear-gradient(90deg, #F8C8C8 0%, #D97748 50%, #F8C8C8 100%);
+  background-size: 200% 100%;
+  animation: connector-shimmer 2s linear infinite;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Critical path pulse glow */
+@keyframes critical-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(217, 119, 72, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 7px rgba(217, 119, 72, 1));
+  }
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.animate-critical-glow {
+  animation: critical-glow 2s ease-in-out infinite;
 }
+
+/* Active data flow pulse along SVG edge */
+@keyframes data-flow-dash {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-data-flow {
+  stroke-dasharray: 7 5;
+  animation: data-flow-dash 1.2s linear infinite;
+}
+
+/* Drag ripple effect */
+@keyframes drag-ripple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 72, 0.5), 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(217, 119, 72, 0.12), 0 14px 28px -4px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 72, 0), 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.animate-drag-ripple {
+  animation: drag-ripple 1.4s ease-out infinite;
+}
+
+/* Pulsing Red Border for Blocked Cards */
+@keyframes pulse-red {
+  0%, 100% {
+    border-color: #F87171;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4), 0 1px 3px rgba(220, 38, 38, 0.1);
+  }
+  50% {
+    border-color: #DC2626;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22), 0 3px 12px rgba(220, 38, 38, 0.18);
+  }
+}
+
+.animate-pulse-red {
+  animation: pulse-red 2.2s ease-in-out infinite;
+}
+
+/* Metric Counter Slide-up Effect */
+@keyframes counter-slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-counter-slide-up {
+  animation: counter-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stat color animation: orange -> green upon improvement */
+@keyframes improve-color-flash {
+  0% {
+    color: #D97748;
+    text-shadow: 0 0 8px rgba(217, 119, 72, 0.6);
+  }
+  40% {
+    color: #16A34A;
+    text-shadow: 0 0 12px rgba(22, 163, 74, 0.6);
+  }
+  100% {
+    color: #1A1A1A;
+    text-shadow: none;
+  }
+}
+
+.animate-color-improve {
+  animation: improve-color-flash 1.8s ease-out;
+}
+
+/* Column Drag-Over subtle animated glow */
+@keyframes column-drop-target {
+  0%, 100% {
+    background-color: rgba(253, 243, 238, 0.7);
+    box-shadow: inset 0 0 0 2px rgba(217, 119, 72, 0.35);
+  }
+  50% {
+    background-color: rgba(253, 238, 230, 0.95);
+    box-shadow: inset 0 0 0 2px rgba(217, 119, 72, 0.6), 0 0 16px rgba(217, 119, 72, 0.15);
+  }
+}
+
+.animate-column-drop-target {
+  animation: column-drop-target 1.6s ease-in-out infinite;
+}
+
+/* Flash effect when a card lands in a column */
+@keyframes column-drop-flash {
+  0% {
+    background-color: rgba(240, 253, 244, 0.8);
+    box-shadow: inset 0 0 0 2px #86EFAC;
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.animate-column-drop-flash {
+  animation: column-drop-flash 1s ease-out forwards;
+}
+
+/* Bottleneck column warning pulse */
+@keyframes bottleneck-pulse {
+  0%, 100% {
+    border-color: #FBBF24;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25), 0 4px 12px rgba(245, 158, 11, 0.08);
+  }
+  50% {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35), 0 6px 18px rgba(245, 158, 11, 0.16);
+  }
+}
+
+.animate-bottleneck-pulse {
+  animation: bottleneck-pulse 2.4s ease-in-out infinite;
+}
+
+/* Green highlight flash when a dependent card becomes Ready */
+@keyframes unblock-flash {
+  0% {
+    border-color: #10B981;
+    background-color: #ECFDF5;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.4), 0 4px 14px rgba(16, 185, 129, 0.25);
+    transform: scale(1.02);
+  }
+  35% {
+    border-color: #059669;
+    background-color: #D1FAE5;
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.25), 0 6px 18px rgba(16, 185, 129, 0.2);
+    transform: scale(1.02);
+  }
+  100% {
+    border-color: #D5CEC4;
+    background-color: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transform: scale(1);
+  }
+}
+
+.animate-unblock-flash {
+  animation: unblock-flash 3.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Toast entrance and exit animations */
+@keyframes toast-slide-up {
+  0% {
+    transform: translateY(20px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-toast-slide-up {
+  animation: toast-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dark Mode Neon Glow Classes */
+html.dark .neon-glow-red,
+.dark .neon-glow-red,
+.dark .dark\:neon-glow-red {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.55), inset 0 0 8px rgba(239, 68, 68, 0.2) !important;
+}
+
+html.dark .neon-glow-green,
+.dark .neon-glow-green,
+.dark .dark\:neon-glow-green {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45), inset 0 0 8px rgba(16, 185, 129, 0.2) !important;
+}
+
+html.dark .neon-glow-teal,
+.dark .neon-glow-teal,
+.dark .dark\:neon-glow-teal {
+  border-color: #14B8A6 !important;
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.45), inset 0 0 8px rgba(20, 184, 166, 0.2) !important;
+}
+
+html.dark .neon-glow-orange,
+.dark .neon-glow-orange,
+.dark .dark\:neon-glow-orange {
+  border-color: #F97316 !important;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.5), inset 0 0 8px rgba(249, 115, 22, 0.2) !important;
+}
+
+/* Dark Mode SVG Neon Connector Filters */
+html.dark .neon-filter-teal {
+  filter: drop-shadow(0 0 5px rgba(20, 184, 166, 0.9)) drop-shadow(0 0 10px rgba(6, 182, 212, 0.6));
+}
+
+html.dark .neon-filter-orange {
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.9)) drop-shadow(0 0 12px rgba(251, 146, 60, 0.6));
+}
+
+html.dark .neon-filter-red {
+  filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 10px rgba(220, 38, 38, 0.6));
+}
+
+html.dark .neon-filter-green {
+  filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.9)) drop-shadow(0 0 10px rgba(34, 197, 94, 0.6));
+}
+
+
+
+
+

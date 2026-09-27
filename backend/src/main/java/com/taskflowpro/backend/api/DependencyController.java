@@ -41,6 +41,12 @@ public class DependencyController {
         return ResponseEntity.noContent().build();
     }
 
-
+    @DeleteMapping
+    public ResponseEntity<Void> removeDependencyByTaskAndPrereq(
+            @RequestParam UUID taskId, @RequestParam UUID prerequisiteId) {
+        dependencyRepository.findByTaskIdAndPrerequisiteId(taskId, prerequisiteId)
+                .ifPresent(dependencyRepository::delete);
+        engine.recomputeSchedule();
+        return ResponseEntity.noContent().build();
     }
-
+}

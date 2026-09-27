@@ -7,6 +7,8 @@ import com.taskflowpro.backend.repository.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,8 +44,25 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest request) {
-        Task task = new Task(request.title(), request.description(), request.durationDays(), request.earliestStart());
+    public ResponseEntity<TaskResponse> createTask(@RequestBody CreateTaskRequest request) {
+        LocalDate earliestStart = request.earliestStart() != null
+                ? request.earliestStart()
+                : (request.startDate() != null ? request.startDate() : LocalDate.now());
+
+        int durationDays;
+        if (request.durationDays() != null) {
+            durationDays = request.durationDays();
+        } else if (request.startDate() != null && request.endDate() != null) {
+            durationDays = (int) java.time.temporal.ChronoUnit.DAYS.between(request.startDate(), request.endDate());
+            if (durationDays < 1) durationDays = 1;
+        } else {
+            durationDays = 1;
+        }
+
+        Task task = new Task(request.title(), request.description(), durationDays, earliestStart);
+        if (request.status() != null) {
+            task.setStatus(TaskStatus.valueOf(request.status()));
+        }
         taskRepository.save(task);
         return ResponseEntity.ok(TaskResponse.from(task, false, null, List.of()));
     }

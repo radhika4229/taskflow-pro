@@ -9,3 +9,6 @@ spring:
     show-sql: true
   flyway:
     enabled: true
+  llm:
+    api-key: ${LLM_API_KEY:}
+

@@ -1,16 +1,25 @@
-# React + Vite
+# TaskFlow Pro — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Kanban board backed by a topological dependency graph (DAG) engine built for hackathons.
 
-Currently, two official plugins are available:
+## Features
+- **Computed Blocked vs Ready**: Cards compute their blocked/ready state directly from prerequisite completion—never manually toggled.
+- **Drag & Drop with Blocked Protection**: Powered by `@hello-pangea/dnd`. Blocked cards cannot be dragged to *In Progress*, *Review*, or *Done*—the system halts the action and displays an inline explanation with the exact blocking prerequisites.
+- **Cycle Conflict Handling**: When adding a dependency that would form a cycle (e.g. A → B → C → A), the server returns `409 Conflict`, which is rendered as a prominent, human-readable inline warning.
+- **Schedule Propagation & Reconvergence**: Schedule changes propagate through the graph without double counting reconvergent paths (diamond problem).
+- **Rollback Reactivity**: Moving a completed task back to *In Progress* immediately re-blocks downstream dependents.
+- **AI Dependency Assistant (Human-in-the-Loop)**: Recommends likely prerequisites with confidence scores and reasoning; strictly requires explicit user acceptance.
+- **4 Live Summary Stat Cards**: Total, In Progress, Blocked, Done computed client-side.
+- **Warm Editorial Aesthetic**: Warm cream background (`#FAF7F2`), terracotta accent (`#D97748`), Fraunces serif display headings, Inter sans-serif body, and text-only status badges.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Quick Start
 
-## React Compiler
+```bash
+# 1. Install dependencies
+npm install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# 2. Run the Vite development server
+npm run dev
+```
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The app will start at `http://localhost:3000` and proxy all `/api/*` calls to the Spring Boot backend running at `http://localhost:8080`.
