@@ -1,23 +1,40 @@
-import axios, { AxiosError } from 'axios';
-import { Task, TaskStatus, Suggestion, ApiErrorResponse, PreviewDelayRequest, PreviewDelayResponse } from '../types';
+import axios from 'axios';
+import { Task, TaskStatus, Suggestion, PreviewDelayRequest, PreviewDelayResponse } from '../types';
 import { placeholderEngine } from './placeholderEngine';
 
+const rawBaseUrl = (import.meta.env.VITE_API_URL || '').trim();
+
+function resolveBaseUrl(url: string): string {
+  if (!url) return '/api';
+  const cleaned = url.replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(cleaned) && !cleaned.endsWith('/api')) {
+    return `${cleaned}/api`;
+  }
+  return cleaned;
+}
+
+const resolvedBaseUrl = resolveBaseUrl(rawBaseUrl);
+
+// Log resolved baseURL on app startup for verification in production
+console.log('[TaskFlow Pro] Initialized API Client with baseURL:', resolvedBaseUrl);
+
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: resolvedBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 3000,
+  timeout: 15000,
 });
 
 let backendAvailable: boolean | null = null;
 
 function isNetworkOrServerError(err: any): boolean {
   if (!axios.isAxiosError(err)) return true;
-  // No response: connection refused, DNS failure, timeout
+  // No response: connection refused, DNS failure, timeout (network error)
   if (!err.response) return true;
-  // 502/503/504: Vite proxy unable to connect to localhost:8080
-  if ([502, 503, 504].includes(err.response.status)) return true;
+  // HTTP status: 404 (endpoint missing / bad route), or 5xx server errors
+  const status = err.response.status;
+  if (status === 404 || status >= 500) return true;
   return false;
 }
 
@@ -222,30 +239,67 @@ export const api = {
       throw err;
     }
   },
+
+  // Returns the resolved API base URL
+  getBaseUrl: (): string => resolvedBaseUrl,
 };
 
 /**
- * Extracts a user-friendly error message from an API error response.
- * Specifically checks for 409 cycle conflict { error: "..." }.
+ * Extracts a user-friendly, guaranteed string error message from any API error.
+ * Guaranteed never to return a raw object, ensuring crash resilience against React error #31.
  */
 export function extractErrorMessage(err: unknown): string {
+  if (!err) return 'An unexpected error occurred';
+  if (typeof err === 'string') return err.trim() || 'An error occurred';
+
   if (axios.isAxiosError(err)) {
-    const axiosError = err as AxiosError<ApiErrorResponse>;
-    if (axiosError.response?.data?.error) {
-      return axiosError.response.data.error;
+    const data = err.response?.data as any;
+    if (data) {
+      if (typeof data === 'string' && data.trim()) {
+        return data;
+      }
+      if (typeof data.error === 'string' && data.error.trim()) {
+        return data.error;
+      }
+      if (data.error && typeof data.error === 'object') {
+        if (typeof data.error.message === 'string') return data.error.message;
+        if (typeof data.error.code === 'string') return `API Error: ${data.error.code}`;
+      }
+      if (typeof data.message === 'string' && data.message.trim()) {
+        return data.message;
+      }
+      if (typeof data.title === 'string' && data.title.trim()) {
+        return data.title;
+      }
     }
-    if (axiosError.response?.data?.message) {
-      return axiosError.response.data.message;
-    }
-    if (axiosError.response?.status === 409) {
+    if (err.response?.status === 409) {
       return 'Circular dependency detected. This dependency would create a cycle and was rejected.';
     }
-    if (axiosError.message) {
-      return axiosError.message;
+    if (err.response?.status === 404) {
+      return 'Backend API endpoint not found (404). Check API URL configuration.';
+    }
+    if (typeof err.message === 'string' && err.message.trim()) {
+      return err.message;
     }
   }
+
   if (err instanceof Error) {
     return err.message;
   }
-  return 'An unexpected error occurred';
+
+  if (typeof err === 'object' && err !== null) {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.error === 'string') return obj.error;
+    if (typeof obj.code === 'string' || typeof obj.code === 'number') {
+      return `Error (${obj.code})`;
+    }
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'An unexpected error occurred';
+    }
+  }
+
+  return String(err);
 }

@@ -77,7 +77,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
           {error && (
             <div className="p-3 rounded-lg bg-badge-blockedBg border border-badge-blockedBorder text-badge-blocked text-xs flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div className="flex-1 font-mono">{error}</div>
+              <div className="flex-1 font-mono">{typeof error === 'string' ? error : String((error as any)?.message || JSON.stringify(error))}</div>
             </div>
           )}
 

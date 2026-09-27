@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeToggleSwitch } from './ThemeToggleSwitch';
 import { LayoutGrid, CalendarRange, Network, CheckCircle2 } from 'lucide-react';
+import { api } from '../services/api';
 
 export type ActiveTab = 'board' | 'timeline' | 'dependencies';
 
@@ -113,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             {apiConnected === true ? (
               <>
-                <CheckCircle2 className="w-3 h-3 text-badge-ready dark:text-emerald-400" /> 8080 Active
+                <CheckCircle2 className="w-3 h-3 text-badge-ready dark:text-emerald-400" /> API Active
               </>
             ) : apiConnected === false ? (
               <>
@@ -124,8 +125,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </span>
         </div>
-        <div className="mt-1 text-[11px] text-ink-400 dark:text-slate-500 font-mono truncate">
-          http://localhost:8080
+        <div className="mt-1 text-[11px] text-ink-400 dark:text-slate-500 font-mono truncate" title={api.getBaseUrl()}>
+          {api.getBaseUrl()}
         </div>
       </div>
     </aside>

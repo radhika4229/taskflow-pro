@@ -1,8 +1,11 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/taskflowpro
-    username: taskflow
-    password: taskflow
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/taskflowpro}
+    username: ${SPRING_DATASOURCE_USERNAME:taskflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:taskflow}
   jpa:
     hibernate:
       ddl-auto: validate

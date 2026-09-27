@@ -731,7 +731,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               {/* Inline Error Notice */}
               {previewError && (
                 <div className="p-2.5 rounded-lg bg-badge-blockedBg dark:bg-red-950/40 border border-badge-blockedBorder dark:border-red-800/60 text-badge-blocked dark:text-red-300 text-xs font-mono flex items-center justify-between gap-2">
-                  <span>{previewError}</span>
+                  <span>{typeof previewError === 'string' ? previewError : String((previewError as any)?.message || JSON.stringify(previewError))}</span>
                   <button
                     type="button"
                     onClick={() => setPreviewError(null)}
@@ -858,7 +858,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <div className="font-semibold uppercase tracking-wider mb-0.5">
                     Cycle Conflict Detected (409)
                   </div>
-                  <div className="leading-relaxed font-mono">{depError}</div>
+                  <div className="leading-relaxed font-mono">{typeof depError === 'string' ? depError : String((depError as any)?.message || JSON.stringify(depError))}</div>
                 </div>
                 <button
                   onClick={() => setDepError(null)}
@@ -1096,7 +1096,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             {suggestionsError && (
               <div className="mb-3 p-3 rounded-lg bg-badge-blockedBg/80 dark:bg-red-950/40 border border-badge-blockedBorder dark:border-red-800/60 text-badge-blocked dark:text-red-300 text-xs flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-badge-blocked dark:text-red-400" />
-                <span className="flex-1 leading-snug">{suggestionsError}</span>
+                <span className="flex-1 leading-snug">{typeof suggestionsError === 'string' ? suggestionsError : String((suggestionsError as any)?.message || JSON.stringify(suggestionsError))}</span>
                 <button
                   onClick={() => setSuggestionsError(null)}
                   className="text-xs font-mono hover:underline"

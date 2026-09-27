@@ -319,7 +319,7 @@ export const App: React.FC = () => {
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed font-mono">
                   <span className="font-semibold block mb-0.5">API Server Notice:</span>
-                  {generalError}
+                  {typeof generalError === 'string' ? generalError : String((generalError as any)?.message || JSON.stringify(generalError))}
                 </div>
               </div>
               <button
@@ -511,10 +511,10 @@ export const App: React.FC = () => {
 
             <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink-900 dark:text-slate-100 font-mono flex items-center gap-1.5 truncate">
-                {toast.title}
+                {typeof toast.title === 'string' ? toast.title : String((toast.title as any)?.message || JSON.stringify(toast.title))}
               </h4>
               <p className="text-[11px] text-ink-500 dark:text-slate-400 mt-0.5 leading-snug break-words">
-                {toast.message}
+                {typeof toast.message === 'string' ? toast.message : String((toast.message as any)?.message || JSON.stringify(toast.message))}
               </p>
             </div>
           </div>
