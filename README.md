@@ -1,14 +1,18 @@
-### **# TaskFlow Pro**
+# TaskFlow Pro
 
+**A Kanban board that actually understands dependencies.**
 
+🔗 **Live demo:** https://taskflow-pro-xxx.vercel.app
+📦 **Backend API:** https://taskflow-pro-backend-knss.onrender.com
 
-\*\*A Kanban board that really understands how tasks are connected.\*\*
+> The backend is hosted on Render's free tier, which sleeps after inactivity.
+> The first request after a period of inactivity can take 30–60 seconds to
+> wake up — if the board briefly shows placeholder/demo data on first load,
+> please wait a moment and refresh. This is a deliberate offline-fallback
+> feature (see `services/api.ts`), not a bug: the app degrades gracefully
+> instead of crashing when the backend is slow or unreachable.
 
-
-
-Most task boards let you move a card to "In Progress" even if the work that it needs to be done isn't finished. TaskFlow Pro won't allow that. A system that checks for connections is behind the board and every status that says Blocked or Ready every schedule and every date you see on the screen is calculated, not typed in by hand.
-
-
+---
 
 #### ***Designed for the \*\*Contata NCR Hackathon 2026\*\* (TaskFlow Pro problem statement).***
 
