@@ -6,6 +6,8 @@ import com.taskflowpro.backend.repository.TaskRepository;
 import com.taskflowpro.backend.repository.DependencyRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,5 +77,30 @@ public class DependencyEngine {
                 taskRepository.save(task);
             }
         }
+    }
+    public List<UUID> getCriticalPath() {
+        List<Task> allTasks = taskRepository.findAll();
+        Map<UUID, Scheduler.TaskNode> nodes = allTasks.stream()
+                .collect(Collectors.toMap(Task::getId,
+                        t -> new Scheduler.TaskNode(t.getId(), t.getEarliestStart(), t.getDurationDays())));
+        Map<UUID, Set<UUID>> edges = loadEdgeMap();
+        return scheduler.findCriticalPath(nodes, edges);
+    }
+ public Map<UUID, Scheduler.ScheduleResult> previewChange(UUID taskId, LocalDate newEarliestStart, Integer newDurationDays) {
+        List<Task> allTasks = taskRepository.findAll();
+        Map<UUID, Scheduler.TaskNode> nodes = new HashMap<>();
+        for (Task t : allTasks) {
+            if (t.getId().equals(taskId)) {
+                nodes.put(t.getId(), new Scheduler.TaskNode(
+                        t.getId(),
+                        newEarliestStart != null ? newEarliestStart : t.getEarliestStart(),
+                        newDurationDays != null ? newDurationDays : t.getDurationDays()
+                ));
+            } else {
+                nodes.put(t.getId(), new Scheduler.TaskNode(t.getId(), t.getEarliestStart(), t.getDurationDays()));
+            }
+        }
+        Map<UUID, Set<UUID>> edges = loadEdgeMap();
+        return scheduler.recompute(nodes, edges); // pure function, nothing saved
     }
 }

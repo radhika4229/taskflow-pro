@@ -1,5 +1,5 @@
 package com.taskflowpro.backend.engine;
-
+import java.util.Comparator;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -66,5 +66,38 @@ public class Scheduler {
             throw new IllegalStateException("Cycle detected, cannot compute topological order");
         }
         return order;
+    }
+    public List<UUID> findCriticalPath(Map<UUID, TaskNode> tasks, Map<UUID, Set<UUID>> dependencies) {
+        List<UUID> order = topologicalOrder(tasks.keySet(), dependencies);
+        Map<UUID, Integer> longestPathEndingHere = new HashMap<>();
+        Map<UUID, UUID> predecessor = new HashMap<>();
+
+        for (UUID id : order) {
+            int duration = tasks.get(id).durationDays();
+            int best = duration;
+            UUID bestPred = null;
+            for (UUID prereqId : dependencies.getOrDefault(id, Set.of())) {
+                int candidate = longestPathEndingHere.get(prereqId) + duration;
+                if (candidate > best) {
+                    best = candidate;
+                    bestPred = prereqId;
+                }
+            }
+            longestPathEndingHere.put(id, best);
+            predecessor.put(id, bestPred);
+        }
+
+        UUID endOfCriticalPath = order.stream()
+                .max(Comparator.comparingInt(longestPathEndingHere::get))
+                .orElse(null);
+
+        List<UUID> path = new ArrayList<>();
+        UUID current = endOfCriticalPath;
+        while (current != null) {
+            path.add(current);
+            current = predecessor.get(current);
+        }
+        Collections.reverse(path);
+        return path;
     }
 }

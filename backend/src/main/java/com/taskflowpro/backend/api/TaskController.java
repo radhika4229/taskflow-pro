@@ -80,4 +80,25 @@ public class TaskController {
         engine.recomputeSchedule();
         return ResponseEntity.ok(TaskResponse.from(task, false, null, List.of()));
     }
+    @PostMapping("/{id}/preview")
+    public ResponseEntity<?> preview(@PathVariable UUID id, @RequestBody Map<String, Object> changes) {
+        java.time.LocalDate newStart = changes.containsKey("earliestStart")
+                ? java.time.LocalDate.parse((String) changes.get("earliestStart")) : null;
+        Integer newDuration = changes.containsKey("durationDays")
+                ? (Integer) changes.get("durationDays") : null;
+
+        var result = engine.previewChange(id, newStart, newDuration);
+        var affected = result.entrySet().stream()
+                .filter(e -> {
+                    Task original = taskRepository.findById(e.getKey()).orElse(null);
+                    return original != null && !e.getValue().startDate().equals(original.getStartDate());
+                })
+                .map(e -> Map.of(
+                        "taskId", e.getKey(),
+                        "newStartDate", e.getValue().startDate(),
+                        "newEndDate", e.getValue().endDate()
+                ))
+                .toList();
+        return ResponseEntity.ok(Map.of("affectedTasks", affected));
+    }
 }
