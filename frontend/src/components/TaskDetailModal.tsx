@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Task, Suggestion } from '../types';
+import { Task, Suggestion, AffectedTask } from '../types';
 import { api, extractErrorMessage } from '../services/api';
 import { analyzeDependencies, checkCycleOnAdd } from '../utils/dependencyAnalysis';
 import {
@@ -72,6 +72,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [processingSuggestionId, setProcessingSuggestionId] = useState<string | null>(null);
 
+  // What-If Delay Preview state
+  const [delayDays, setDelayDays] = useState<number>(2);
+  const [previewResults, setPreviewResults] = useState<AffectedTask[] | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
   // Comments state (stored in localStorage)
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
@@ -110,6 +116,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setSuggestions([]);
     setSuggestionsError(null);
     setIsPrereqDropdownOpen(false);
+    setDelayDays(2);
+    setPreviewResults(null);
+    setPreviewError(null);
+    setIsLoadingPreview(false);
   }, [task.id]);
 
   // Click outside to close autocomplete dropdown
@@ -352,6 +362,35 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       setSuggestionsError(errorMsg);
     } finally {
       setProcessingSuggestionId(null);
+    }
+  };
+
+  // What-If Delay Preview Handler (read-only)
+  const handlePreviewImpact = async () => {
+    setIsLoadingPreview(true);
+    setPreviewError(null);
+
+    try {
+      // Current duration is: endDate - startDate in days. If the task doesn't have dates, default to current duration = 1.
+      let currentDuration = 1;
+      if (task.startDate && task.endDate) {
+        try {
+          const s = new Date(task.startDate).getTime();
+          const e = new Date(task.endDate).getTime();
+          const diff = Math.round((e - s) / 86400000);
+          currentDuration = Math.max(1, diff);
+        } catch {
+          currentDuration = 1;
+        }
+      }
+
+      const durationDays = currentDuration + Math.max(0, delayDays);
+      const res = await api.previewTaskDelay(task.id, { durationDays });
+      setPreviewResults(res.affectedTasks || []);
+    } catch (_err: unknown) {
+      setPreviewError("Couldn't load preview.");
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
@@ -640,6 +679,101 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <span>Target Due</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Preview a delay section */}
+          <div>
+            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-ink-400 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-terracotta dark:text-neon-orange" />
+              <span>Preview a delay</span>
+            </h4>
+
+            <div className="bg-white dark:bg-dark-card border border-warmgray-border dark:border-dark-border rounded-lg p-4 shadow-subtle space-y-3">
+              <p className="text-xs text-ink-600 dark:text-slate-400 leading-relaxed font-normal">
+                Simulate what happens to downstream project tasks if this task is delayed.
+              </p>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="delay-days-input" className="text-xs font-medium text-ink-700 dark:text-slate-300 whitespace-nowrap">
+                    Days to delay:
+                  </label>
+                  <input
+                    id="delay-days-input"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={delayDays}
+                    onChange={(e) => setDelayDays(Math.max(1, parseInt(e.target.value) || 1))}
+                    disabled={isLoadingPreview}
+                    className="w-20 px-2.5 py-1.5 bg-cream-50 dark:bg-dark-surface border border-warmgray-border dark:border-dark-border rounded-lg text-xs font-mono font-semibold text-ink-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-terracotta dark:focus:ring-neon-orange focus:border-terracotta dark:focus:border-neon-orange text-center disabled:opacity-50"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handlePreviewImpact}
+                  disabled={isLoadingPreview}
+                  className="px-3.5 py-1.5 bg-terracotta hover:bg-terracotta-hover active:bg-terracotta-active disabled:bg-terracotta/40 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {isLoadingPreview ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Previewing...</span>
+                    </>
+                  ) : (
+                    <span>Preview impact</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Inline Error Notice */}
+              {previewError && (
+                <div className="p-2.5 rounded-lg bg-badge-blockedBg dark:bg-red-950/40 border border-badge-blockedBorder dark:border-red-800/60 text-badge-blocked dark:text-red-300 text-xs font-mono flex items-center justify-between gap-2">
+                  <span>{previewError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewError(null)}
+                    className="hover:underline font-mono text-[11px]"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Preview Results Display */}
+              {previewResults !== null && !isLoadingPreview && (
+                <div className="pt-2 border-t border-warmgray-border/60 dark:border-dark-border/60 space-y-2">
+                  {previewResults.length === 0 ? (
+                    <p className="text-xs text-ink-500 dark:text-slate-400 font-mono italic">
+                      No other tasks would be affected.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-mono text-ink-500 dark:text-slate-400 font-semibold block">
+                        Affected tasks ({previewResults.length}):
+                      </span>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {previewResults.map((item) => {
+                          const affectedTaskObj = allTasks.find((t) => t.id === item.taskId);
+                          const title = affectedTaskObj ? affectedTaskObj.title : item.taskId;
+                          return (
+                            <div
+                              key={item.taskId}
+                              className="p-2 rounded bg-cream-100/70 dark:bg-dark-surface border border-warmgray-border/70 dark:border-dark-border text-xs font-mono text-ink-800 dark:text-slate-200 flex items-center justify-between gap-2"
+                            >
+                              <span className="font-medium truncate">
+                                {title}: now ends {item.newEndDate}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -35,8 +35,17 @@ public class DependencyController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> removeDependency(@PathVariable UUID id) {
-        dependencyRepository.deleteById(id);
+    public ResponseEntity<Void> removeDependency(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID taskId,
+            @RequestParam(required = false) UUID prerequisiteId) {
+        if (taskId != null) {
+            UUID prereq = prerequisiteId != null ? prerequisiteId : id;
+            dependencyRepository.findByTaskIdAndPrerequisiteId(taskId, prereq)
+                    .ifPresent(dependencyRepository::delete);
+        } else {
+            dependencyRepository.deleteById(id);
+        }
         engine.recomputeSchedule();
         return ResponseEntity.noContent().build();
     }

@@ -82,10 +82,10 @@ public class TaskController {
     }
     @PostMapping("/{id}/preview")
     public ResponseEntity<?> preview(@PathVariable UUID id, @RequestBody Map<String, Object> changes) {
-        java.time.LocalDate newStart = changes.containsKey("earliestStart")
+        java.time.LocalDate newStart = changes.get("earliestStart") != null
                 ? java.time.LocalDate.parse((String) changes.get("earliestStart")) : null;
-        Integer newDuration = changes.containsKey("durationDays")
-                ? (Integer) changes.get("durationDays") : null;
+        Integer newDuration = changes.get("durationDays") != null
+                ? ((Number) changes.get("durationDays")).intValue() : null;
 
         var result = engine.previewChange(id, newStart, newDuration);
         var affected = result.entrySet().stream()

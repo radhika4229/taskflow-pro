@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Task, TaskStatus, Suggestion, ApiErrorResponse } from '../types';
+import { Task, TaskStatus, Suggestion, ApiErrorResponse, PreviewDelayRequest, PreviewDelayResponse } from '../types';
 import { placeholderEngine } from './placeholderEngine';
 
 const client = axios.create({
@@ -176,6 +176,48 @@ export const api = {
       if (isNetworkOrServerError(err)) {
         backendAvailable = false;
         return { success: true };
+      }
+      throw err;
+    }
+  },
+
+  // Get critical path task IDs from backend
+  getCriticalPath: async (): Promise<string[]> => {
+    if (backendAvailable === false) {
+      return placeholderEngine.getCriticalPath();
+    }
+    try {
+      const response = await client.get<string[]>('/critical-path');
+      backendAvailable = true;
+      return response.data;
+    } catch (err: any) {
+      if (isNetworkOrServerError(err)) {
+        backendAvailable = false;
+        return placeholderEngine.getCriticalPath();
+      }
+      throw err;
+    }
+  },
+
+  // What-If Delay Preview
+  previewTaskDelay: async (
+    taskId: string,
+    payload: PreviewDelayRequest
+  ): Promise<PreviewDelayResponse> => {
+    if (backendAvailable === false) {
+      return placeholderEngine.previewTaskDelay(taskId, payload);
+    }
+    try {
+      const response = await client.post<PreviewDelayResponse>(
+        `/tasks/${taskId}/preview`,
+        payload
+      );
+      backendAvailable = true;
+      return response.data;
+    } catch (err: any) {
+      if (isNetworkOrServerError(err)) {
+        backendAvailable = false;
+        return placeholderEngine.previewTaskDelay(taskId, payload);
       }
       throw err;
     }

@@ -1,4 +1,5 @@
-import { Task, TaskStatus, Suggestion } from '../types';
+import { Task, TaskStatus, Suggestion, AffectedTask, PreviewDelayRequest, PreviewDelayResponse } from '../types';
+import { calculateCriticalPath } from '../utils/criticalPath';
 
 const INITIAL_TASKS: Task[] = [
   {
@@ -390,6 +391,91 @@ class PlaceholderEngine {
     }
 
     return suggestions;
+  }
+
+  public getCriticalPath(): string[] {
+    const cp = calculateCriticalPath(this.tasks);
+    return cp.orderedChain.map((t) => t.id);
+  }
+
+  public previewTaskDelay(taskId: string, payload: PreviewDelayRequest): PreviewDelayResponse {
+    const targetTask = this.tasks.find((t) => t.id === taskId);
+    if (!targetTask) return { affectedTasks: [] };
+
+    const parseDate = (dStr: string) => new Date(dStr + 'T00:00:00Z');
+    const toDateString = (d: Date) => d.toISOString().split('T')[0];
+    const addDays = (dStr: string, days: number): string => {
+      const d = parseDate(dStr);
+      d.setUTCDate(d.getUTCDate() + days);
+      return toDateString(d);
+    };
+    const getTaskDuration = (t: Task): number => {
+      if (!t.startDate || !t.endDate) return 2;
+      const s = parseDate(t.startDate).getTime();
+      const e = parseDate(t.endDate).getTime();
+      return Math.max(1, Math.round((e - s) / 86400000));
+    };
+
+    const schedule = new Map<string, { start: string; end: string }>();
+    this.tasks.forEach((t) => {
+      schedule.set(t.id, {
+        start: t.startDate || toDateString(new Date()),
+        end: t.endDate || addDays(toDateString(new Date()), 2),
+      });
+    });
+
+    const targetStart = payload.earliestStart || targetTask.startDate || toDateString(new Date());
+    const targetDuration = typeof payload.durationDays === 'number' ? payload.durationDays : getTaskDuration(targetTask);
+    const targetEnd = addDays(targetStart, targetDuration);
+    schedule.set(taskId, { start: targetStart, end: targetEnd });
+
+    // Ripple downstream changes topologically
+    for (let iter = 0; iter < this.tasks.length; iter++) {
+      let changed = false;
+      for (const t of this.tasks) {
+        if (t.id === taskId) continue;
+        const prereqs = t.prerequisiteIds || [];
+        if (prereqs.length === 0) continue;
+
+        let maxPrereqEnd = '';
+        for (const pId of prereqs) {
+          const pSched = schedule.get(pId);
+          if (pSched && (!maxPrereqEnd || pSched.end > maxPrereqEnd)) {
+            maxPrereqEnd = pSched.end;
+          }
+        }
+
+        if (maxPrereqEnd) {
+          const currentSched = schedule.get(t.id)!;
+          // If maxPrereqEnd is greater than or equal to current start, push start forward
+          if (parseDate(maxPrereqEnd).getTime() >= parseDate(currentSched.start).getTime()) {
+            const newStart = addDays(maxPrereqEnd, 1);
+            const duration = getTaskDuration(t);
+            const newEnd = addDays(newStart, duration);
+            if (newStart !== currentSched.start || newEnd !== currentSched.end) {
+              schedule.set(t.id, { start: newStart, end: newEnd });
+              changed = true;
+            }
+          }
+        }
+      }
+      if (!changed) break;
+    }
+
+    const affectedTasks: AffectedTask[] = [];
+    for (const t of this.tasks) {
+      if (t.id === taskId) continue;
+      const sched = schedule.get(t.id);
+      if (sched && (sched.start !== t.startDate || sched.end !== t.endDate)) {
+        affectedTasks.push({
+          taskId: t.id,
+          newStartDate: sched.start,
+          newEndDate: sched.end,
+        });
+      }
+    }
+
+    return { affectedTasks };
   }
 
   public resetToDefault() {

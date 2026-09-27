@@ -29,3 +29,18 @@ export interface ApiErrorResponse {
   message?: string;
   status?: number;
 }
+
+export interface AffectedTask {
+  taskId: string;
+  newStartDate: string;
+  newEndDate: string;
+}
+
+export interface PreviewDelayRequest {
+  durationDays?: number;
+  earliestStart?: string;
+}
+
+export interface PreviewDelayResponse {
+  affectedTasks: AffectedTask[];
+}

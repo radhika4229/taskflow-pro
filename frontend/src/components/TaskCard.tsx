@@ -32,6 +32,7 @@ interface TaskCardProps {
   isJustUnblocked?: boolean;
   defaultCollapsed?: boolean;
   isCritical?: boolean;
+  isOnCriticalPath?: boolean;
   isCycleMember?: boolean;
 }
 
@@ -45,6 +46,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   isJustUnblocked = false,
   defaultCollapsed,
   isCritical = false,
+  isOnCriticalPath = false,
   isCycleMember = false,
 }) => {
   const [showTreeTooltip, setShowTreeTooltip] = useState(false);
@@ -261,15 +263,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             }
           }}
           className={`relative group rounded-lg border p-4 mb-3 cursor-pointer select-none transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-card hover:scale-[1.01] ${
+            (isOnCriticalPath || isCritical) ? 'border-l-4 !border-l-[#D97748] ' : ''
+          }${
             snapshot.isDragging
               ? 'shadow-2xl border-terracotta ring-2 ring-terracotta/50 scale-105 rotate-2 -translate-y-2 z-50 animate-drag-ripple bg-white dark:bg-dark-cardHover'
               : isDragBlockedWarning
               ? 'border-badge-blocked ring-2 ring-badge-blockedBg animate-pulse bg-white dark:bg-dark-card'
               : isJustUnblocked
               ? 'animate-unblock-flash border-emerald-500 ring-2 ring-emerald-400/60 shadow-lg bg-white dark:bg-dark-card'
-              : isCritical && task.blocked
+              : (isOnCriticalPath || isCritical) && task.blocked
               ? 'border-red-500 bg-red-50/25 dark:bg-[#1D131A] ring-2 ring-red-400/70 animate-pulse-red shadow-md neon-glow-red'
-              : isCritical && task.status !== 'DONE'
+              : (isOnCriticalPath || isCritical) && task.status !== 'DONE'
               ? 'border-amber-400 dark:border-amber-500/80 bg-amber-50/25 dark:bg-[#1D1A14] ring-1 ring-amber-400/50 shadow-md animate-critical-glow'
               : task.blocked
               ? 'border-red-400 bg-red-50/15 hover:border-red-500 dark:bg-[#1C1217] dark:border-red-500 neon-glow-red animate-pulse-red'
@@ -398,17 +402,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
 
               {/* Critical Path Badge with Tooltip */}
-              {isCritical && (
+              {(isOnCriticalPath || isCritical) && (
                 <div
                   className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-tight shadow-2xs ${
                     task.blocked
                       ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800/60 animate-pulse'
-                      : 'bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60'
+                      : 'bg-[#D97748]/10 text-[#D97748] border border-[#D97748]/30 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800/60'
                   }`}
                   title="This task is on critical path - any delay affects deadline"
                 >
-                  <Flame className="w-3 h-3 text-terracotta dark:text-neon-orange shrink-0 fill-current" />
-                  <span>Critical Path</span>
+                  <Flame className="w-3 h-3 text-[#D97748] dark:text-neon-orange shrink-0 fill-current" />
+                  <span>Critical path</span>
                 </div>
               )}
 
@@ -461,7 +465,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
 
           {/* Critical Path Warning: Project completion blocked callout */}
-          {isCritical && task.blocked && (
+          {(isOnCriticalPath || isCritical) && task.blocked && (
             <div
               className="mb-2 px-2.5 py-1 rounded bg-red-100/90 dark:bg-red-950/70 border border-red-300 dark:border-red-800/70 text-red-900 dark:text-red-200 text-[10px] font-mono flex items-center justify-between gap-1 shadow-2xs animate-pulse"
               title="This task is on critical path - any delay affects deadline"

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { Task, TaskStatus } from '../types';
+import { api } from '../services/api';
 import { TaskCard } from './TaskCard';
 import { ToggleSwitch } from './ToggleSwitch';
 import { calculateCriticalPath } from '../utils/criticalPath';
@@ -86,8 +87,36 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   setWarnedTaskId,
   justUnblockedTaskIds = [],
 }) => {
-  // Critical Path calculation
+  // Critical Path calculation (fallback / DAG analysis)
   const criticalPath = useMemo(() => calculateCriticalPath(tasks), [tasks]);
+
+  // Backend Critical Path endpoint: GET /api/critical-path
+  const [criticalPathTaskIds, setCriticalPathTaskIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .getCriticalPath()
+      .then((ids) => {
+        if (isMounted) {
+          setCriticalPathTaskIds(Array.isArray(ids) ? ids : []);
+        }
+      })
+      .catch(() => {
+        // Non-critical enhancement: fail silently with no highlights
+        if (isMounted) {
+          setCriticalPathTaskIds([]);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [tasks]);
+
+  const backendCriticalPathSet = useMemo(
+    () => new Set(criticalPathTaskIds),
+    [criticalPathTaskIds]
+  );
 
   // Dependency Analysis (Scores, Cycles, Keystones, Orphans)
   const dependencyAnalysis = useMemo(
@@ -866,7 +895,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             isDragBlockedWarning={warnedTaskId === task.id}
                             isJustUnblocked={justUnblockedTaskIds.includes(task.id)}
                             defaultCollapsed={isCompactCards}
-                            isCritical={criticalPath.criticalPathNodeIds.has(task.id)}
+                            isCritical={backendCriticalPathSet.has(task.id)}
+                            isOnCriticalPath={backendCriticalPathSet.has(task.id)}
                             isCycleMember={dependencyAnalysis.cycleAnalysis.cycleNodeIds.has(task.id)}
                           />
                         ))

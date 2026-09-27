@@ -470,19 +470,23 @@ export const App: React.FC = () => {
       </nav>
 
       {/* Task Detail Modal / Slide-over Drawer */}
-      <TaskDetailModal
-        task={selectedTask}
-        allTasks={tasks}
-        onClose={() => setSelectedTaskId(null)}
-        onRefreshTasks={() => fetchTasks(true)}
-      />
+      {selectedTask && (
+        <TaskDetailModal
+          task={selectedTask}
+          allTasks={tasks}
+          onClose={() => setSelectedTaskId(null)}
+          onRefreshTasks={() => fetchTasks(true)}
+        />
+      )}
 
       {/* New Task Modal */}
-      <NewTaskModal
-        isOpen={isNewTaskOpen}
-        onClose={() => setIsNewTaskOpen(false)}
-        onSuccess={() => fetchTasks(false)}
-      />
+      {isNewTaskOpen && (
+        <NewTaskModal
+          isOpen={isNewTaskOpen}
+          onClose={() => setIsNewTaskOpen(false)}
+          onSuccess={() => fetchTasks(false)}
+        />
+      )}
 
       {/* Interactive Toast Notification with Undo & Dependency Resolution */}
       {toast && (
